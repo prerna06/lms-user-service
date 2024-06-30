@@ -145,7 +145,27 @@ Resources:
             Method: post
             RestApiId:
               Ref: LmsUserApi
-#
+
+  UpdateUserActivityFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Stage}-LmsUser-UpdateOrAddUserActivity"
+      SnapStart:
+        ApplyOn: PublishedVersions
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LmsUserTable
+      Environment:
+        Variables:
+          SPRING_CLOUD_FUNCTION_DEFINITION: updateOrAddUserActivity
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: lms/user/updateOrAddUserActivity
+            Method: post
+            RestApiId:
+              Ref: LmsUserApi
 #  DisableUserFunction:
 #    Type: AWS::Serverless::Function
 #    Properties:

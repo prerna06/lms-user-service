@@ -240,4 +240,52 @@ public class UserServiceImpl implements UserService {
                 });
         userDynamoRepository.save(lmsUser);
     }
+    @Override
+    public void updateOrAddUserActivity(UpdateUserProgressCommand updateUserProgressCommand) {
+        log.info("Entering updateUserProgress for UserId %s, Course Id %s ", updateUserProgressCommand.getUserId(), updateUserProgressCommand.getCourse().getCourseId());
+        LmsUser lmsUser = userDynamoRepository.findBy(updateUserProgressCommand.getUserId());
+        LMSCourse course = updateUserProgressCommand.getCourse();
+        Optional<Enrollment> enrollmentOpt = lmsUser.getEnrollments().stream()
+                .filter(e -> e.getCourseId().equals(course.getCourseId()))
+                .findFirst();
+        if (enrollmentOpt.isPresent()){
+            Enrollment enrollment = enrollmentOpt.get();
+            Optional<Module> moduleOpt = enrollment.getCourse().getModules().stream()
+                    .filter(module -> module.getSerialNumber() == course.getModules().get(0).getSerialNumber())
+                    .findFirst();
+
+            if (moduleOpt.isPresent()) {
+                Module module = moduleOpt.get();
+                Optional<Chapter> chapterOpt = module.getChapters().stream()
+                        .filter(chapter -> chapter.getSerialNumber() == course.getModules().get(0).getChapters().get(0).getSerialNumber())
+                        .findFirst();
+
+                if (chapterOpt.isPresent()) {
+                    chapterOpt.get().setWatchedDuration(course.getModules().get(0).getChapters().get(0).getWatchedDuration());
+                } else {
+                    module.getChapters().add(course.getModules().get(0).getChapters().get(0));
+                }
+                module.setWatchedDuration(module.getChapters().stream()
+                        .mapToInt(Chapter::getWatchedDuration)
+                        .sum());
+            } else {
+                enrollment.getCourse().getModules().add(course.getModules().get(0));
+            }
+            enrollment.getCourse().setWatchedDuration(enrollment.getCourse().getModules().stream()
+                    .mapToInt(Module::getWatchedDuration)
+                    .sum());
+            updateEnrollment(lmsUser, enrollment, course.getCourseId());
+        }
+    }
+
+    private void updateEnrollment(LmsUser lmsUser, Enrollment enrollment, String courseId) {
+        lmsUser.getEnrollments().stream()
+                .filter(e -> e.getCourseId().equals(courseId))
+                .findFirst()
+                .ifPresent(e -> {
+                    int index = lmsUser.getEnrollments().indexOf(e);
+                    lmsUser.getEnrollments().set(index, enrollment);
+                });
+        userDynamoRepository.save(lmsUser);
+    }
 }

@@ -34,4 +34,6 @@ public interface UserService {
     int getAllUsersCount();
 
     void updateUserProgress(UpdateUserProgressCommand updateUserProgressCommand);
+
+    void updateOrAddUserActivity(UpdateUserProgressCommand updateUserProgressCommand);
 }
