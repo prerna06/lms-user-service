@@ -146,10 +146,10 @@ Resources:
             RestApiId:
               Ref: LmsUserApi
 
-  UpdateUserActivityFunction:
+  UpdateActivityFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Stage}-LmsUser-UpdateOrAddUserActivity"
+      FunctionName: !Sub "${Stage}-LmsUser-UpdateActivityFunction"
       SnapStart:
         ApplyOn: PublishedVersions
       Policies:
@@ -157,12 +157,12 @@ Resources:
             TableName: !Ref LmsUserTable
       Environment:
         Variables:
-          SPRING_CLOUD_FUNCTION_DEFINITION: updateOrAddUserActivity
+          SPRING_CLOUD_FUNCTION_DEFINITION: updateActivityFunction
       Events:
         ApiEvent:
           Type: Api
           Properties:
-            Path: lms/user/updateOrAddUserActivity
+            Path: lms/user/updateActivity
             Method: post
             RestApiId:
               Ref: LmsUserApi

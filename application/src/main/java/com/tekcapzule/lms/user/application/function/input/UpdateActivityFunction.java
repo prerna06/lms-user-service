@@ -20,13 +20,13 @@ import java.util.function.Function;
 
 @Component
 @Slf4j
-public class UpdateUserActivityFunction implements Function<Message<UpdateUserProgressInput>, Message<Void>> {
+public class UpdateActivityFunction implements Function<Message<UpdateUserProgressInput>, Message<Void>> {
 
     private final UserService userService;
 
     private final AppConfig appConfig;
 
-    public UpdateUserActivityFunction(final UserService userService, final AppConfig appConfig) {
+    public UpdateActivityFunction(final UserService userService, final AppConfig appConfig) {
         this.userService = userService;
         this.appConfig = appConfig;
     }

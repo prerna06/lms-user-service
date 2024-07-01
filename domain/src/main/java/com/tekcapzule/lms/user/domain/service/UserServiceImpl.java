@@ -242,43 +242,61 @@ public class UserServiceImpl implements UserService {
     }
     @Override
     public void updateOrAddUserActivity(UpdateUserProgressCommand updateUserProgressCommand) {
-        log.info("Entering updateUserProgress for UserId %s, Course Id %s ", updateUserProgressCommand.getUserId(), updateUserProgressCommand.getCourse().getCourseId());
+        log.info("Entering updateOrAddUserActivity for UserId %s, Course Id %s ", updateUserProgressCommand.getUserId(), updateUserProgressCommand.getCourse().getCourseId());
         LmsUser lmsUser = userDynamoRepository.findBy(updateUserProgressCommand.getUserId());
+        log.info("User found :: "+lmsUser);
         LMSCourse course = updateUserProgressCommand.getCourse();
         Optional<Enrollment> enrollmentOpt = lmsUser.getEnrollments().stream()
                 .filter(e -> e.getCourseId().equals(course.getCourseId()))
                 .findFirst();
-        if (enrollmentOpt.isPresent()){
+        if (enrollmentOpt.isPresent()) {
             Enrollment enrollment = enrollmentOpt.get();
-            Optional<Module> moduleOpt = enrollment.getCourse().getModules().stream()
-                    .filter(module -> module.getSerialNumber() == course.getModules().get(0).getSerialNumber())
-                    .findFirst();
-
-            if (moduleOpt.isPresent()) {
-                Module module = moduleOpt.get();
-                Optional<Chapter> chapterOpt = module.getChapters().stream()
-                        .filter(chapter -> chapter.getSerialNumber() == course.getModules().get(0).getChapters().get(0).getSerialNumber())
+            log.info("Enrollment Found :: " + enrollment.getCourseId());
+            for (Module moduleInRequest : course.getModules()){
+                Optional<Module> moduleOpt = enrollment.getCourse().getModules().stream()
+                        .filter(module -> module.getSerialNumber() == moduleInRequest.getSerialNumber())
                         .findFirst();
 
-                if (chapterOpt.isPresent()) {
-                    chapterOpt.get().setWatchedDuration(course.getModules().get(0).getChapters().get(0).getWatchedDuration());
+                if (moduleOpt.isPresent()) {
+                    Module module = moduleOpt.get();
+                    log.info("Module Found :: " + module.getSerialNumber());
+                    module.setWatchedDuration(moduleInRequest.getWatchedDuration());
+                    module.setStatus(moduleInRequest.getStatus());
+                    for(Chapter chapterInReq: moduleInRequest.getChapters()) {
+                        Optional<Chapter> chapterOpt = module.getChapters().stream()
+                                .filter(chapter -> chapter.getSerialNumber() == chapterInReq.getSerialNumber())
+                                .findFirst();
+
+                        if (chapterOpt.isPresent()) {
+                            log.info("Chapter Found :: " + chapterOpt.get().getSerialNumber());
+                            Chapter chapter = chapterOpt.get();
+                            chapter.setWatchedDuration(chapterInReq.getWatchedDuration());
+                            chapter.setStatus(chapterInReq.getStatus());
+                            module = updateChapter(module, chapter, chapterInReq.getSerialNumber());
+                        } else {
+                            log.info("Chapter Not Found :: Adding");
+                            module.getChapters().add(chapterInReq);
+                        }
+                        /*module.setWatchedDuration(module.getChapters().stream()
+                                .mapToInt(Chapter::getWatchedDuration)
+                                .sum());*/
+
+                    }
+                    updateModule(enrollment, module, moduleInRequest.getSerialNumber());
                 } else {
-                    module.getChapters().add(course.getModules().get(0).getChapters().get(0));
+                    log.info("Module Not Found :: Adding");
+                    enrollment.getCourse().getModules().add(moduleInRequest);
                 }
-                module.setWatchedDuration(module.getChapters().stream()
-                        .mapToInt(Chapter::getWatchedDuration)
-                        .sum());
-            } else {
-                enrollment.getCourse().getModules().add(course.getModules().get(0));
+                /*enrollment.getCourse().setWatchedDuration(enrollment.getCourse().getModules().stream()
+                        .mapToInt(Module::getWatchedDuration)
+                        .sum());*/
             }
-            enrollment.getCourse().setWatchedDuration(enrollment.getCourse().getModules().stream()
-                    .mapToInt(Module::getWatchedDuration)
-                    .sum());
             updateEnrollment(lmsUser, enrollment, course.getCourseId());
         }
     }
 
     private void updateEnrollment(LmsUser lmsUser, Enrollment enrollment, String courseId) {
+        log.info("In updateEnrollment");
         lmsUser.getEnrollments().stream()
                 .filter(e -> e.getCourseId().equals(courseId))
                 .findFirst()
@@ -287,5 +305,31 @@ public class UserServiceImpl implements UserService {
                     lmsUser.getEnrollments().set(index, enrollment);
                 });
         userDynamoRepository.save(lmsUser);
+    }
+    private Enrollment updateModule(Enrollment enrollment, Module module, int moduleSerialNo) {
+        log.info("In Module");
+        LMSCourse lmsCourse = enrollment.getCourse();
+        lmsCourse.getModules().stream()
+                .filter(m -> m.getSerialNumber() == (moduleSerialNo))
+                .findFirst()
+                .ifPresent(m -> {
+                    int index = lmsCourse.getModules().indexOf(m);
+                    lmsCourse.getModules().set(index, module);
+                });
+        enrollment.setCourse(lmsCourse);
+        log.info("In Module :: Updated enrollment "+enrollment);
+        return enrollment;
+    }
+    private Module updateChapter(Module module, Chapter chapter, int chapterSerialNo) {
+        log.info("In Chapter");
+        module.getChapters().stream()
+                .filter(c -> c.getSerialNumber() == (chapterSerialNo))
+                .findFirst()
+                .ifPresent(c -> {
+                    int index = module.getChapters().indexOf(c);
+                    module.getChapters().set(index, chapter);
+                });
+        log.info("In Chapter :: Updated module "+module);
+        return module;
     }
 }
