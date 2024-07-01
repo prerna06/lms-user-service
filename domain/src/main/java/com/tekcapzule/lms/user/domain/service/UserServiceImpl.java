@@ -251,6 +251,10 @@ public class UserServiceImpl implements UserService {
                 .findFirst();
         if (enrollmentOpt.isPresent()) {
             Enrollment enrollment = enrollmentOpt.get();
+            enrollment.getCourse().setLastVisitedChapter(course.getLastVisitedChapter());
+            enrollment.getCourse().setLastVisitedModule(course.getLastVisitedModule());
+            enrollment.getCourse().setStatus(course.getStatus());
+            enrollment.getCourse().setWatchedDuration(course.getWatchedDuration());
             log.info("Enrollment Found :: " + enrollment.getCourseId());
             for (Module moduleInRequest : course.getModules()){
                 Optional<Module> moduleOpt = enrollment.getCourse().getModules().stream()
