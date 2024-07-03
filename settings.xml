@@ -20,6 +20,9 @@
                 <repository>
                     <id>lmsUser</id>
                     <url>https://maven.pkg.github.com/tekcapzule/lmsUser-service</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
                 </repository>
                 <repository>
                     <id>central</id>

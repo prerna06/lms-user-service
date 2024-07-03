@@ -82,28 +82,28 @@ Resources:
 
   # Setup Lambda Functions
 
-#  CreateUserFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      FunctionName: !Sub "${Stage}-LmsUser-CreateUser"
-#      SnapStart:
-#        ApplyOn: PublishedVersions
-#      Policies:
-#        - DynamoDBCrudPolicy:
-#            TableName: !Ref LmsUserTable
-#      Environment:
-#        Variables:
-#          SPRING_CLOUD_FUNCTION_DEFINITION: createUserFunction
-#
-#      Events:
-#        ApiEvent:
-#          Type: Api
-#          Properties:
-#            Path: lms/user/create
-#            Method: post
-#            RestApiId:
-#              Ref: LmsUserApi
-#
+  CreateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Stage}-LmsUser-CreateUser"
+      SnapStart:
+        ApplyOn: PublishedVersions
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LmsUserTable
+      Environment:
+        Variables:
+          SPRING_CLOUD_FUNCTION_DEFINITION: createUserFunction
+
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: lms/user/create
+            Method: post
+            RestApiId:
+              Ref: LmsUserApi
+
 #  UpdateUserFunction:
 #    Type: AWS::Serverless::Function
 #    Properties:
@@ -145,7 +145,27 @@ Resources:
             Method: post
             RestApiId:
               Ref: LmsUserApi
-#
+
+  UpdateActivityFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Stage}-LmsUser-UpdateActivityFunction"
+      SnapStart:
+        ApplyOn: PublishedVersions
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LmsUserTable
+      Environment:
+        Variables:
+          SPRING_CLOUD_FUNCTION_DEFINITION: updateActivityFunction
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: lms/user/updateActivity
+            Method: post
+            RestApiId:
+              Ref: LmsUserApi
 #  DisableUserFunction:
 #    Type: AWS::Serverless::Function
 #    Properties:

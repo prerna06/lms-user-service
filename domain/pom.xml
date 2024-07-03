@@ -9,8 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.tekcapzule</groupId>
-    <artifactId>lms-user-domain</artifactId>
-    <version>1.4.4</version>
+
+    <artifactId>lmsuser-domain</artifactId>
+    <version>1.4.6</version>
+
     <name>LMS User Domain</name>
     <description>LMS User Domain</description>
     <properties>
@@ -63,7 +65,7 @@
         <repository>
             <id>lmsUser</id>
             <name>GitHub TekCapzule Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/tekcapzule/lmsUser-service</url>
+            <url>https://maven.pkg.github.com/tekcapzule/lmsuser-service</url>
         </repository>
     </distributionManagement>
 </project>
