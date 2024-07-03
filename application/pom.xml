@@ -9,8 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.tekcapzule</groupId>
-    <artifactId>lms-lmsUser-service</artifactId>
-    <version>1.4.7</version>
+
+    <artifactId>lmsuser-service</artifactId>
+    <version>1.4.8</version>
+
     <name>LMS User Service</name>
     <description>LMS User Service</description>
     <properties>
@@ -59,7 +61,7 @@
         <dependency>
             <groupId>com.tekcapzule</groupId>
             <artifactId>lms-user-domain</artifactId>
-            <version>1.4.7</version>
+            <version>1.4.8</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
