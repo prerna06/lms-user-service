@@ -4,8 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.tekcapzule</groupId>
+
     <artifactId>lmsuser-application</artifactId>
     <version>1.4.6</version>
+
     <packaging>pom</packaging>
     <name>LMS User Application</name>
     <description>LMS User Application</description>
