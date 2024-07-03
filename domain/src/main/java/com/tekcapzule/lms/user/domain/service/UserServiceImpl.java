@@ -280,6 +280,7 @@ public class UserServiceImpl implements UserService {
                         } else {
                             log.info("Chapter Not Found :: Adding");
                             module.getChapters().add(chapterInReq);
+                            module.getChapters().sort(Comparator.comparingInt(Chapter::getSerialNumber));
                         }
                         /*module.setWatchedDuration(module.getChapters().stream()
                                 .mapToInt(Chapter::getWatchedDuration)
@@ -290,6 +291,7 @@ public class UserServiceImpl implements UserService {
                 } else {
                     log.info("Module Not Found :: Adding");
                     enrollment.getCourse().getModules().add(moduleInRequest);
+                    enrollment.getCourse().getModules().sort(Comparator.comparingInt(Module::getSerialNumber));
                 }
                 /*enrollment.getCourse().setWatchedDuration(enrollment.getCourse().getModules().stream()
                         .mapToInt(Module::getWatchedDuration)
