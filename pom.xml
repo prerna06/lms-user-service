@@ -6,7 +6,7 @@
     <groupId>com.tekcapzule</groupId>
 
     <artifactId>lmsuser-application</artifactId>
-    <version>1.4.8</version>
+    <version>1.4.9</version>
 
     <packaging>pom</packaging>
     <name>LMS User Application</name>
