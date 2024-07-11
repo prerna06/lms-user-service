@@ -27,7 +27,7 @@ import java.util.function.Function;
 
 @Component
 @Slf4j
-public class CreateUserFunction implements Function<CognitoUserPoolPostAuthenticationEvent,CognitoUserPoolPostAuthenticationEvent> {
+public class CreateUserFunction implements Function<CognitoUserPoolPostConfirmationEvent,CognitoUserPoolPostConfirmationEvent> {
 
     private final UserService userService;
 
@@ -55,7 +55,7 @@ public class CreateUserFunction implements Function<CognitoUserPoolPostAuthentic
     }
 
     @Override
-    public CognitoUserPoolPostAuthenticationEvent apply(CognitoUserPoolPostAuthenticationEvent cognitoUserPoolPostConfirmationEvent) {
+    public CognitoUserPoolPostConfirmationEvent apply(CognitoUserPoolPostConfirmationEvent cognitoUserPoolPostConfirmationEvent) {
         Map<String, Object> responseHeaders = new HashMap<>();
         Map<String, Object> payload = new HashMap<>();
         String stage = appConfig.getStage().toUpperCase();
