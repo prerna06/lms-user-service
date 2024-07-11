@@ -39,13 +39,13 @@ public class UserServiceImpl implements UserService {
                 .lastName(createCommand.getLastName())
                 .phoneNumber(createCommand.getPhoneNumber())
                 .activeSince(DateTime.now(DateTimeZone.UTC).toString())
-                .address(Address.builder()
+                /*.address(Address.builder()
                         .addressLine1(createCommand.getAddress().getAddressLine1())
                         .addressLine2(createCommand.getAddress().getAddressLine1())
                         .city(createCommand.getAddress().getCity())
                         .state(createCommand.getAddress().getState())
                         .country(createCommand.getAddress().getCountry())
-                        .zipCode(createCommand.getAddress().getZipCode()).build())
+                        .zipCode(createCommand.getAddress().getZipCode()).build())*/
                 .status(Status.ACTIVE)
                 .build();
 

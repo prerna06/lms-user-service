@@ -11,7 +11,7 @@
     <groupId>com.tekcapzule</groupId>
 
     <artifactId>lmsuser-service</artifactId>
-    <version>1.4.9</version>
+    <version>1.5.0</version>
 
     <name>LMS User Service</name>
     <description>LMS User Service</description>
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>com.tekcapzule</groupId>
             <artifactId>lmsuser-domain</artifactId>
-            <version>1.4.9</version>
+            <version>1.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
