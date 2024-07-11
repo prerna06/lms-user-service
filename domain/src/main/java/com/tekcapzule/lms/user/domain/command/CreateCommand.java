@@ -18,7 +18,7 @@ public class CreateCommand extends Command {
     private String lastName;
     private String emailId;
     private String phoneNumber;
-    private Address address;
+    //private Address address;
 }
 
 
