@@ -1,4 +1,4 @@
-package com.tekcapzule.lms.user.application.function.input;
+package com.tekcapzule.lms.user.application.function;
 
 import com.tekcapzule.core.domain.Origin;
 import com.tekcapzule.core.utils.HeaderUtil;
@@ -6,6 +6,7 @@ import com.tekcapzule.core.utils.Outcome;
 import com.tekcapzule.core.utils.PayloadUtil;
 import com.tekcapzule.core.utils.Stage;
 import com.tekcapzule.lms.user.application.config.AppConfig;
+import com.tekcapzule.lms.user.application.function.input.UpdateUserProgressInput;
 import com.tekcapzule.lms.user.application.mapper.InputOutputMapper;
 import com.tekcapzule.lms.user.domain.command.UpdateUserProgressCommand;
 import com.tekcapzule.lms.user.domain.service.UserService;

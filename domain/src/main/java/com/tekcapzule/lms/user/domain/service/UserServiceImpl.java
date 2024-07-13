@@ -222,6 +222,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Map<EnrollmentStatus, Long> getCourseCountGroupByStatus(String userId, String tenantId) {
+        log.info(String.format("Entering get course by status service - User Id:%s", userId));
+
+        //LmsUser user = userDynamoRepository.findBy(tenantId+ HASH +userId);
+        LmsUser user = userDynamoRepository.findBy(userId);
+        if(user!=null){
+            return user.getEnrollments().stream().collect(Collectors.groupingBy(Enrollment::getEnrollmentStatus, Collectors.counting()));
+        }
+        return null;
+    }
+
+    @Override
     public int getAllUsersCount() {
         log.info("Entering getall users count service");
         return userDynamoRepository.getAllUsersCount();

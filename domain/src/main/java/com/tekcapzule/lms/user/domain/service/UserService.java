@@ -29,6 +29,8 @@ public interface UserService {
 
     Map<EnrollmentStatus, List<Enrollment>> getCoursesGroupByStatus(String userId, String tenantId);
 
+    Map<EnrollmentStatus, Long> getCourseCountGroupByStatus(String userId, String tenantId);
+
     List<Enrollment> getCourseByStatus(String userId, String tenantId, String status);
 
     int getAllUsersCount();
