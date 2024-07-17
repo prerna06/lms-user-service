@@ -210,13 +210,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Map<EnrollmentStatus, List<Enrollment>> getCoursesGroupByStatus(String userId, String tenantId) {
+    public List<Enrollment> getCoursesGroupByStatus(String userId, String tenantId, String satus) {
         log.info(String.format("Entering get course by status service - User Id:%s", userId));
 
         //LmsUser user = userDynamoRepository.findBy(tenantId+ HASH +userId);
         LmsUser user = userDynamoRepository.findBy(userId);
         if(user!=null){
-            return user.getEnrollments().stream().collect(Collectors.groupingBy(Enrollment::getEnrollmentStatus));
+            return user.getEnrollments().stream().filter(e-> satus.equals(e.getEnrollmentStatus().toString())).collect(Collectors.toList());
         }
         return null;
     }
@@ -267,6 +267,7 @@ public class UserServiceImpl implements UserService {
             enrollment.getCourse().setLastVisitedModule(course.getLastVisitedModule());
             enrollment.getCourse().setStatus(course.getStatus());
             enrollment.getCourse().setWatchedDuration(course.getWatchedDuration());
+            enrollment.getCourse().setQuizScore(course.getQuizScore());
             log.info("Enrollment Found :: " + enrollment.getCourseId());
             for (Module moduleInRequest : course.getModules()){
                 Optional<Module> moduleOpt = enrollment.getCourse().getModules().stream()
