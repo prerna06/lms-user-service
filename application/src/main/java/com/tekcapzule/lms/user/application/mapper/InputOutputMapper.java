@@ -82,4 +82,11 @@ public final class InputOutputMapper {
         return removeBookmarkCommand;
     };
 
+    public static final BiFunction<GetCertificateInput, Origin, GetCertificateCommand> buildGetOrGenerateCertificateCommand = (getCertificateInput, origin) -> {
+        GetCertificateCommand getCertificateCommand =  GetCertificateCommand.builder().build();
+        BeanUtils.copyProperties(getCertificateInput, getCertificateCommand);
+        addOrigin.apply(getCertificateCommand, origin);
+        return getCertificateCommand;
+    };
+
 }

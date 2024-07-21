@@ -10,6 +10,7 @@ import org.joda.time.DateTimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.net.MalformedURLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,10 +20,12 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
     private static final String HASH = "#";
     private UserDynamoRepository userDynamoRepository;
+    private PdfService pdfService;
 
     @Autowired
-    public UserServiceImpl(UserDynamoRepository userDynamoRepository) {
+    public UserServiceImpl(UserDynamoRepository userDynamoRepository, PdfService pdfService) {
         this.userDynamoRepository = userDynamoRepository;
+        this.pdfService = pdfService;
     }
 
     @Override
@@ -120,7 +123,7 @@ public class UserServiceImpl implements UserService {
                     .courseId(optInCourseCommand.getCourseId())
                             .course(LMSCourse.builder().courseId(optInCourseCommand.getCourseId())
                                     .modules(Arrays.asList(module)).build())
-                    .enrollmentStatus(EnrollmentStatus.OPTEDIN)
+                    .enrollmentStatus(EnrollmentStatus.NOTSTARTED)
                     .build());
             log.info("lmsUser.getEnrollments() 2  :: %s" , enrollments);
             lmsUser.setEnrollments(enrollments);
@@ -198,25 +201,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<Enrollment> getCourseByStatus(String userId, String tenantId, String status) {
-        log.info(String.format("Entering get course by status service - User Id:%s Course Status:%s", userId, status));
-
-        //LmsUser user = userDynamoRepository.findBy(tenantId+ HASH +userId);
-        LmsUser user = userDynamoRepository.findBy(userId);
-        if(user!=null){
-            return user.getEnrollments().stream().filter(course -> status.equals(course.getEnrollmentStatus())).collect(Collectors.toList());
-        }
-        return null;
-    }
-
-    @Override
     public List<Enrollment> getCoursesGroupByStatus(String userId, String tenantId, String satus) {
         log.info(String.format("Entering get course by status service - User Id:%s", userId));
 
         //LmsUser user = userDynamoRepository.findBy(tenantId+ HASH +userId);
         LmsUser user = userDynamoRepository.findBy(userId);
         if(user!=null){
-            return user.getEnrollments().stream().filter(e-> satus.equals(e.getEnrollmentStatus().toString())).collect(Collectors.toList());
+            return user.getEnrollments().stream().filter(e-> satus.equals(e.getEnrollmentStatus().getStatus())).collect(Collectors.toList());
         }
         return null;
     }
@@ -243,19 +234,6 @@ public class UserServiceImpl implements UserService {
     public void updateUserProgress(UpdateUserProgressCommand updateUserProgressCommand) {
         log.info("Entering updateUserProgress for UserId %s, Course Id %s ", updateUserProgressCommand.getUserId(), updateUserProgressCommand.getCourse().getCourseId());
         LmsUser lmsUser = userDynamoRepository.findBy(updateUserProgressCommand.getUserId());
-        LMSCourse course = updateUserProgressCommand.getCourse();
-        lmsUser.getEnrollments().stream()
-                .forEach(enrollment -> {
-                    if(enrollment.getCourseId().equals(course.getCourseId())){
-                        enrollment.setCourse(course);
-                    }
-                });
-        userDynamoRepository.save(lmsUser);
-    }
-    @Override
-    public void updateOrAddUserActivity(UpdateUserProgressCommand updateUserProgressCommand) {
-        log.info("Entering updateOrAddUserActivity for UserId %s, Course Id %s ", updateUserProgressCommand.getUserId(), updateUserProgressCommand.getCourse().getCourseId());
-        LmsUser lmsUser = userDynamoRepository.findBy(updateUserProgressCommand.getUserId());
         log.info("User found :: "+lmsUser);
         LMSCourse course = updateUserProgressCommand.getCourse();
         Optional<Enrollment> enrollmentOpt = lmsUser.getEnrollments().stream()
@@ -263,11 +241,14 @@ public class UserServiceImpl implements UserService {
                 .findFirst();
         if (enrollmentOpt.isPresent()) {
             Enrollment enrollment = enrollmentOpt.get();
+            enrollment.setEnrollmentStatus(EnrollmentStatus.getEnrollmentStatus(course.getStatus()));
             enrollment.getCourse().setLastVisitedChapter(course.getLastVisitedChapter());
             enrollment.getCourse().setLastVisitedModule(course.getLastVisitedModule());
             enrollment.getCourse().setStatus(course.getStatus());
             enrollment.getCourse().setWatchedDuration(course.getWatchedDuration());
             enrollment.getCourse().setQuizScore(course.getQuizScore());
+            enrollment.getCourse().setQuizStatus(course.getQuizStatus());
+
             log.info("Enrollment Found :: " + enrollment.getCourseId());
             for (Module moduleInRequest : course.getModules()){
                 Optional<Module> moduleOpt = enrollment.getCourse().getModules().stream()
@@ -313,6 +294,72 @@ public class UserServiceImpl implements UserService {
             updateEnrollment(lmsUser, enrollment, course.getCourseId());
         }
     }
+    @Override
+    public void updateOrAddUserActivity(UpdateUserProgressCommand updateUserProgressCommand) {
+        log.info("Entering updateOrAddUserActivity for UserId %s, Course Id %s ", updateUserProgressCommand.getUserId(), updateUserProgressCommand.getCourse().getCourseId());
+        LmsUser lmsUser = userDynamoRepository.findBy(updateUserProgressCommand.getUserId());
+        log.info("User found :: "+lmsUser);
+        LMSCourse course = updateUserProgressCommand.getCourse();
+        Optional<Enrollment> enrollmentOpt = lmsUser.getEnrollments().stream()
+                .filter(e -> e.getCourseId().equals(course.getCourseId()))
+                .findFirst();
+        if (enrollmentOpt.isPresent()) {
+            Enrollment enrollment = enrollmentOpt.get();
+            enrollment.setEnrollmentStatus(EnrollmentStatus.getEnrollmentStatus(course.getStatus()));
+            enrollment.getCourse().setLastVisitedChapter(course.getLastVisitedChapter());
+            enrollment.getCourse().setLastVisitedModule(course.getLastVisitedModule());
+            enrollment.getCourse().setStatus(course.getStatus());
+            enrollment.getCourse().setWatchedDuration(course.getWatchedDuration());
+            enrollment.getCourse().setQuizScore(course.getQuizScore());
+            enrollment.getCourse().setQuizStatus(course.getQuizStatus());
+
+            log.info("Enrollment Found :: " + enrollment.getCourseId());
+            for (Module moduleInRequest : course.getModules()){
+                Optional<Module> moduleOpt = enrollment.getCourse().getModules().stream()
+                        .filter(module -> module.getSerialNumber() == moduleInRequest.getSerialNumber())
+                        .findFirst();
+
+                if (moduleOpt.isPresent()) {
+                    Module module = moduleOpt.get();
+                    log.info("Module Found :: " + module.getSerialNumber());
+                    module.setWatchedDuration(moduleInRequest.getWatchedDuration());
+                    module.setStatus(moduleInRequest.getStatus());
+                    for(Chapter chapterInReq: moduleInRequest.getChapters()) {
+                        Optional<Chapter> chapterOpt = module.getChapters().stream()
+                                .filter(chapter -> chapter.getSerialNumber() == chapterInReq.getSerialNumber())
+                                .findFirst();
+
+                        if (chapterOpt.isPresent()) {
+                            log.info("Chapter Found :: " + chapterOpt.get().getSerialNumber());
+                            Chapter chapter = chapterOpt.get();
+                            chapter.setWatchedDuration(chapterInReq.getWatchedDuration());
+                            chapter.setStatus(chapterInReq.getStatus());
+                            module = updateChapter(module, chapter, chapterInReq.getSerialNumber());
+                        } else {
+                            log.info("Chapter Not Found :: Adding");
+                            module.getChapters().add(chapterInReq);
+                            module.getChapters().sort(Comparator.comparingInt(Chapter::getSerialNumber));
+                        }
+                        /*module.setWatchedDuration(module.getChapters().stream()
+                                .mapToInt(Chapter::getWatchedDuration)
+                                .sum());*/
+
+                    }
+                    updateModule(enrollment, module, moduleInRequest.getSerialNumber());
+                } else {
+                    log.info("Module Not Found :: Adding");
+                    enrollment.getCourse().getModules().add(moduleInRequest);
+                    enrollment.getCourse().getModules().sort(Comparator.comparingInt(Module::getSerialNumber));
+                }
+                /*enrollment.getCourse().setWatchedDuration(enrollment.getCourse().getModules().stream()
+                        .mapToInt(Module::getWatchedDuration)
+                        .sum());*/
+            }
+            updateEnrollment(lmsUser, enrollment, course.getCourseId());
+        }
+    }
+
+
 
     private void updateEnrollment(LmsUser lmsUser, Enrollment enrollment, String courseId) {
         log.info("In updateEnrollment");

@@ -12,21 +12,19 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
 @Component
 @Slf4j
-public class GetCourseCountByStatusFunction implements Function<Message<GetCourseByStatusInput>, Message<Map<EnrollmentStatus, Long>>> {
+public class GetUserCourseCountByStatusFunction implements Function<Message<GetCourseByStatusInput>, Message<Map<EnrollmentStatus, Long>>> {
 
     private final UserService userService;
 
     private final AppConfig appConfig;
 
-    public GetCourseCountByStatusFunction(final UserService userService, final AppConfig appConfig) {
+    public GetUserCourseCountByStatusFunction(final UserService userService, final AppConfig appConfig) {
         this.userService = userService;
         this.appConfig = appConfig;
     }

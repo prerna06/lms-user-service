@@ -15,7 +15,7 @@ import java.util.Map;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = true)
-@DynamoDBTable(tableName = "LmsUser")
+@DynamoDBTable(tableName = "LmsUser-test")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -49,10 +49,4 @@ public class LmsUser extends BaseDomainEntity implements AggregateRoot {
     private String badges;
     @DynamoDBAttribute(attributeName = "address")
     private Address address;
-    /**
-     * Map of Progress Information
-     * Key : courseId#moduleId#chapterId
-     */
-    @DynamoDBAttribute(attributeName = "progress")
-    private Map<String, Progress> progressDetails;
 }

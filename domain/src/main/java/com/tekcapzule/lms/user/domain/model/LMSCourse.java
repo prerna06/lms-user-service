@@ -24,5 +24,7 @@ public class LMSCourse {
     private int lastVisitedChapter;
     @DynamoDBAttribute(attributeName="modules")
     private List<Module> modules;
+    private int quizScore;
+    private String quizStatus;
 }
 

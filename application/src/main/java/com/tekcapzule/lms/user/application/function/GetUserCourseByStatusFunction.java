@@ -20,13 +20,13 @@ import java.util.function.Function;
 
 @Component
 @Slf4j
-public class GetCourseByStatusFunction implements Function<Message<GetCourseByStatusInput>, Message<List<Enrollment>>> {
+public class GetUserCourseByStatusFunction implements Function<Message<GetCourseByStatusInput>, Message<List<Enrollment>>> {
 
     private final UserService userService;
 
     private final AppConfig appConfig;
 
-    public GetCourseByStatusFunction(final UserService userService, final AppConfig appConfig) {
+    public GetUserCourseByStatusFunction(final UserService userService, final AppConfig appConfig) {
         this.userService = userService;
         this.appConfig = appConfig;
     }
@@ -35,14 +35,12 @@ public class GetCourseByStatusFunction implements Function<Message<GetCourseBySt
     @Override
     public Message<List<Enrollment>> apply(Message<GetCourseByStatusInput> getInputMessage) {
         Map<String, Object> responseHeaders = new HashMap<>();
-        Map<String, Object> payload = new HashMap<>();
         List<Enrollment> enrollmentList = null;
         String stage = appConfig.getStage().toUpperCase();
         try {
             GetCourseByStatusInput getCourseByStatusInput = getInputMessage.getPayload();
             log.info(String.format("Entering get user Function -  User Id:%s", getCourseByStatusInput.getUserId()));
-            //enrollmentList = userService.getCoursesGroupByStatus(getCourseByStatusInput.getUserId(), getCourseByStatusInput.getTenantId(), getCourseByStatusInput.getStatus());
-            Map<String, Object> responseHeader = new HashMap();
+            enrollmentList = userService.getCoursesGroupByStatus(getCourseByStatusInput.getUserId(), getCourseByStatusInput.getTenantId(), getCourseByStatusInput.getStatus());
             if (enrollmentList == null) {
                 responseHeaders = HeaderUtil.populateResponseHeaders(responseHeaders, Stage.valueOf(stage), Outcome.NOT_FOUND);
                 enrollmentList = new ArrayList<>();
