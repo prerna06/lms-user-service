@@ -22,4 +22,6 @@ public class Module {
     private String status;
     @DynamoDBAttribute(attributeName = "chapters")
     private List<Chapter> chapters;
+    private int quizScore;
+    private String quizStatus;
 }

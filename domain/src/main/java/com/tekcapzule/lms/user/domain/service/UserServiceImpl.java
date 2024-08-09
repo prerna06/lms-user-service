@@ -1,6 +1,7 @@
 package com.tekcapzule.lms.user.domain.service;
 
 import com.tekcapzule.lms.user.domain.command.*;
+import com.tekcapzule.lms.user.domain.exception.FoundException;
 import com.tekcapzule.lms.user.domain.model.*;
 import com.tekcapzule.lms.user.domain.model.Module;
 import com.tekcapzule.lms.user.domain.repository.UserDynamoRepository;
@@ -10,7 +11,6 @@ import org.joda.time.DateTimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.net.MalformedURLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -117,12 +117,16 @@ public class UserServiceImpl implements UserService {
                 log.info("lmsUser.getEnrollments() 1  :: %s" , enrollments);
                 enrollments = new ArrayList<>();
             }
-            Chapter chapter = Chapter.builder().build();
-            Module module = Module.builder().chapters(Arrays.asList(chapter)).build();
+            Optional<Enrollment> enrollmentFound = enrollments.stream()
+                    .filter(e -> e.getCourseId().equals(optInCourseCommand.getCourseId()))
+                    .findFirst();
+            if(enrollmentFound.isPresent()){
+                throw new FoundException("Already Enrolled");
+            }
             enrollments.add(Enrollment.builder()
                     .courseId(optInCourseCommand.getCourseId())
                             .course(LMSCourse.builder().courseId(optInCourseCommand.getCourseId())
-                                    .modules(Arrays.asList(module)).build())
+                                    .build())
                     .enrollmentStatus(EnrollmentStatus.NOTSTARTED)
                     .build());
             log.info("lmsUser.getEnrollments() 2  :: %s" , enrollments);
@@ -246,8 +250,8 @@ public class UserServiceImpl implements UserService {
             enrollment.getCourse().setLastVisitedModule(course.getLastVisitedModule());
             enrollment.getCourse().setStatus(course.getStatus());
             enrollment.getCourse().setWatchedDuration(course.getWatchedDuration());
-            enrollment.getCourse().setQuizScore(course.getQuizScore());
-            enrollment.getCourse().setQuizStatus(course.getQuizStatus());
+            enrollment.getCourse().setAssessmentScore(course.getAssessmentScore());
+            enrollment.getCourse().setAssessmentStatus(course.getAssessmentStatus());
 
             log.info("Enrollment Found :: " + enrollment.getCourseId());
             for (Module moduleInRequest : course.getModules()){
@@ -310,56 +314,85 @@ public class UserServiceImpl implements UserService {
             enrollment.getCourse().setLastVisitedModule(course.getLastVisitedModule());
             enrollment.getCourse().setStatus(course.getStatus());
             enrollment.getCourse().setWatchedDuration(course.getWatchedDuration());
-            enrollment.getCourse().setQuizScore(course.getQuizScore());
-            enrollment.getCourse().setQuizStatus(course.getQuizStatus());
+            enrollment.getCourse().setAssessmentScore(course.getAssessmentScore());
+            enrollment.getCourse().setAssessmentStatus(course.getAssessmentStatus());
 
             log.info("Enrollment Found :: " + enrollment.getCourseId());
             for (Module moduleInRequest : course.getModules()){
-                Optional<Module> moduleOpt = enrollment.getCourse().getModules().stream()
-                        .filter(module -> module.getSerialNumber() == moduleInRequest.getSerialNumber())
-                        .findFirst();
+                if(enrollment.getCourse().getModules()!=null) {
+                    Optional<Module> moduleOpt = enrollment.getCourse().getModules().stream()
+                            .filter(module -> module.getSerialNumber() == moduleInRequest.getSerialNumber())
+                            .findFirst();
 
-                if (moduleOpt.isPresent()) {
-                    Module module = moduleOpt.get();
-                    log.info("Module Found :: " + module.getSerialNumber());
-                    module.setWatchedDuration(moduleInRequest.getWatchedDuration());
-                    module.setStatus(moduleInRequest.getStatus());
-                    for(Chapter chapterInReq: moduleInRequest.getChapters()) {
-                        Optional<Chapter> chapterOpt = module.getChapters().stream()
-                                .filter(chapter -> chapter.getSerialNumber() == chapterInReq.getSerialNumber())
-                                .findFirst();
+                    if (moduleOpt.isPresent()) {
+                        Module module = moduleOpt.get();
+                        log.info("Module Found :: " + module.getSerialNumber());
+                        module.setWatchedDuration(moduleInRequest.getWatchedDuration());
+                        module.setStatus(moduleInRequest.getStatus());
+                        module.setQuizScore(moduleInRequest.getQuizScore());
+                        module.setQuizStatus(moduleInRequest.getQuizStatus());
+                        for (Chapter chapterInReq : moduleInRequest.getChapters()) {
+                            if(module.getChapters()!=null) {
+                                Optional<Chapter> chapterOpt = module.getChapters().stream()
+                                        .filter(chapter -> chapter.getSerialNumber() == chapterInReq.getSerialNumber())
+                                        .findFirst();
 
-                        if (chapterOpt.isPresent()) {
-                            log.info("Chapter Found :: " + chapterOpt.get().getSerialNumber());
-                            Chapter chapter = chapterOpt.get();
-                            chapter.setWatchedDuration(chapterInReq.getWatchedDuration());
-                            chapter.setStatus(chapterInReq.getStatus());
-                            module = updateChapter(module, chapter, chapterInReq.getSerialNumber());
-                        } else {
-                            log.info("Chapter Not Found :: Adding");
-                            module.getChapters().add(chapterInReq);
-                            module.getChapters().sort(Comparator.comparingInt(Chapter::getSerialNumber));
+                                if (chapterOpt.isPresent()) {
+                                    log.info("Chapter Found :: Updating " + chapterOpt.get().getSerialNumber());
+                                    Chapter chapter = chapterOpt.get();
+                                    chapter.setWatchedDuration(chapterInReq.getWatchedDuration());
+                                    chapter.setStatus(chapterInReq.getStatus());
+                                    module = updateChapter(module, chapter, chapterInReq.getSerialNumber());
+                                } else {
+                                    log.info("Chapter Not Found :: Adding");
+                                    module.getChapters().add(chapterInReq);
+                                    module.getChapters().sort(Comparator.comparingInt(Chapter::getSerialNumber));
+                                }
+                            }  else {
+                                log.info("No Chapters Found :: Adding");
+                                module.setChapters(Arrays.asList(chapterInReq));
+                                module.getChapters().sort(Comparator.comparingInt(Chapter::getSerialNumber));
+                            }
+
+
                         }
-                        /*module.setWatchedDuration(module.getChapters().stream()
-                                .mapToInt(Chapter::getWatchedDuration)
-                                .sum());*/
-
+                        updateModule(enrollment, module, moduleInRequest.getSerialNumber());
+                    } else {
+                        log.info("Module Not Found :: Adding");
+                        enrollment.getCourse().getModules().add(moduleInRequest);
+                        enrollment.getCourse().getModules().sort(Comparator.comparingInt(Module::getSerialNumber));
                     }
-                    updateModule(enrollment, module, moduleInRequest.getSerialNumber());
                 } else {
-                    log.info("Module Not Found :: Adding");
-                    enrollment.getCourse().getModules().add(moduleInRequest);
+                    log.info("No Module Found :: Adding");
+
+                    enrollment.getCourse().setModules(Arrays.asList(moduleInRequest));
                     enrollment.getCourse().getModules().sort(Comparator.comparingInt(Module::getSerialNumber));
                 }
-                /*enrollment.getCourse().setWatchedDuration(enrollment.getCourse().getModules().stream()
-                        .mapToInt(Module::getWatchedDuration)
-                        .sum());*/
             }
             updateEnrollment(lmsUser, enrollment, course.getCourseId());
         }
     }
 
-
+    @Override
+    public String getEnrollmentStatus(String userId, String tenantId, String courseId) {
+        log.info("Entering getEnrollmentStatus for UserId %s, Course Id %s ", userId, courseId);
+        LmsUser lmsUser = userDynamoRepository.findBy(userId);
+        log.info("User found :: "+lmsUser);
+        if(lmsUser != null) {
+            List<Enrollment> enrollments = lmsUser.getEnrollments();
+            if(enrollments!=null && !enrollments.isEmpty()) {
+                Optional<Enrollment> enrollmentOpt = lmsUser.getEnrollments().stream()
+                        .filter(e -> e.getCourseId().equals(courseId))
+                        .findFirst();
+                if(enrollmentOpt.isPresent()){
+                    return enrollmentOpt.get().getEnrollmentStatus().getStatus();
+                }
+            }
+        } else {
+            throw new RuntimeException(String.format("User: %s not found", userId));
+        }
+        return null;
+    }
 
     private void updateEnrollment(LmsUser lmsUser, Enrollment enrollment, String courseId) {
         log.info("In updateEnrollment");

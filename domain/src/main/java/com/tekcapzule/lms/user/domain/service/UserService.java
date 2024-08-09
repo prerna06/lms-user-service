@@ -36,4 +36,6 @@ public interface UserService {
     void updateUserProgress(UpdateUserProgressCommand updateUserProgressCommand);
 
     void updateOrAddUserActivity(UpdateUserProgressCommand updateUserProgressCommand);
+
+    String getEnrollmentStatus(String userId, String tenantId, String courseId);
 }

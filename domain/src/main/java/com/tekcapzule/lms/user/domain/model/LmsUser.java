@@ -15,7 +15,7 @@ import java.util.Map;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = true)
-@DynamoDBTable(tableName = "LmsUser-test")
+@DynamoDBTable(tableName = "LmsUser")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
