@@ -38,4 +38,6 @@ public interface UserService {
     void updateOrAddUserActivity(UpdateUserProgressCommand updateUserProgressCommand);
 
     String getEnrollmentStatus(String userId, String tenantId, String courseId);
+
+    byte[] completeCourse(CompleteCourseCommand completeCourseCommand);
 }

@@ -89,4 +89,12 @@ public final class InputOutputMapper {
         return getCertificateCommand;
     };
 
+    public static final BiFunction<CompleteCourseInput, Origin, CompleteCourseCommand> buildCompleteCourseCommand = (completeCourseInput, origin) -> {
+        CompleteCourseCommand completeCourseCommand =  CompleteCourseCommand.builder().build();
+        BeanUtils.copyProperties(completeCourseInput, completeCourseCommand);
+        addOrigin.apply(completeCourseCommand, origin);
+        return completeCourseCommand;
+    };
+
+
 }

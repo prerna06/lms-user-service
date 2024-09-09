@@ -23,5 +23,10 @@ public class LMSCourse {
     private List<Module> modules;
     private int assessmentScore;
     private String assessmentStatus;
+    private int courseDuration;
+    private int points;
+    private boolean earnBadge;
+    private String courseName;
+    private String instructor;
 }
 

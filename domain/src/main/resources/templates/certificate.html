@@ -24,29 +24,23 @@
             
         } */
 
-        body {
+        .container {
+            /* border: 20px solid tan; */
             color: black;
             font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
             font-size: 18px;
             text-align: center;
-            background: url(templates/bg.jpg) center center no-repeat;
+            background: url(https://d101d1wz0yz806.cloudfront.net/template/bg.jpg) center center no-repeat;
             display: flex;
             justify-content: center;
             align-items: center;
-        }
 
-        .container {
-            /* border: 20px solid tan; */
-            width: 842px;
-            height: 564px;
-            display: table-cell;
-            vertical-align: middle;
             border: 2px solid #f7f7f7;
             border-radius: 18px;
         }
 
         .logo {
-            background: url(templates/logo.svg) no-repeat;
+            background: url(https://d101d1wz0yz806.cloudfront.net/template/logo.svg) no-repeat;
             display: flex;
             align-items: center;
         }
@@ -114,40 +108,40 @@
 </head>
 
 <body>
-<div class="container">
+    <div class="container">
 
-    <div class="logo"></div>
-    <div class="marquee">
-        Certificate of Completion
-    </div>
-
-    <div class="assignment">
-        This certificate is awarded to
-    </div>
-
-    <div class="person">
-        #NAME#
-    </div>
-    <div class="reason">
-        as proof that the above has successfully completed<br> the course of #COURSEDURATION# total hours of
-    </div>
-    <div class="course-name">
-        #COURSENAME#
-    </div>
-    <div class="reason">
-        <i>Given the month of #DATEANDTIME#. We really proud of her great contributions.</i>
-    </div>
-    <div class="footer">
-        <div class="signature">
-            <div class="name">#INSTRUCTORSIGN#</div>
-            <p class="owner">#COURSEINSTRUCTOR#, Instructor</p>
-            <!-- <p>TekCapzule Technologies Private Limited</p> -->
+        <div class="logo"></div>
+        <div class="marquee">
+            Certificate of Completion
         </div>
-        <div class="footer-logo">
-            <img src="templates/logo.svg" alt="" />
+
+        <div class="assignment">
+            This certificate is awarded to
+        </div>
+
+        <div class="person">
+            #NAME#
+        </div>
+        <div class="reason">
+            as proof that the above has successfully completed<br> the course of #COURSEDURATION# total hours of
+        </div>
+        <div class="course-name">
+            #COURSENAME#
+        </div>
+        <div class="reason">
+            <i>Given the month of #DATEANDTIME#. We really proud of her great contributions.</i>
+        </div>
+        <div class="footer">
+            <div class="signature">
+                <div class="name">#INSTRUCTORSIGN#</div>
+                <p class="owner">#COURSEINSTRUCTOR#, Instructor</p>
+                <!-- <p>TekCapzule Technologies Private Limited</p> -->
+            </div>
+            <!--<div class="footer-logo">
+                <img src="https://d101d1wz0yz806.cloudfront.net/template/logo.svg" alt="" />
+            </div> -->
         </div>
     </div>
-</div>
 </body>
 
 </html>

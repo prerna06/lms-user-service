@@ -46,7 +46,7 @@ public class LmsUser extends BaseDomainEntity implements AggregateRoot {
     @DynamoDBAttribute(attributeName = "points")
     private int points;
     @DynamoDBAttribute(attributeName = "badges")
-    private String badges;
+    private Map<String, Integer> badges;
     @DynamoDBAttribute(attributeName = "address")
     private Address address;
 }

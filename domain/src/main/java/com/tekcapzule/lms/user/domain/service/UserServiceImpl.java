@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 @Service
 public class UserServiceImpl implements UserService {
     private static final String HASH = "#";
+    private static final String COMPLETION_CERTIFICATE = "completion_certificate";
     private UserDynamoRepository userDynamoRepository;
     private PdfService pdfService;
 
@@ -230,7 +231,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public int getAllUsersCount() {
-        log.info("Entering getall users count service");
+        log.info("Entering get all users count service");
         return userDynamoRepository.getAllUsersCount();
     }
 
@@ -238,64 +239,26 @@ public class UserServiceImpl implements UserService {
     public void updateUserProgress(UpdateUserProgressCommand updateUserProgressCommand) {
         log.info("Entering updateUserProgress for UserId %s, Course Id %s ", updateUserProgressCommand.getUserId(), updateUserProgressCommand.getCourse().getCourseId());
         LmsUser lmsUser = userDynamoRepository.findBy(updateUserProgressCommand.getUserId());
+        if(lmsUser == null){
+            new RuntimeException("User not found");
+        }
         log.info("User found :: "+lmsUser);
         LMSCourse course = updateUserProgressCommand.getCourse();
+        log.info("Course found ::"+course);
+        if (course == null) {
+            new RuntimeException("No course in the request");
+        }
         Optional<Enrollment> enrollmentOpt = lmsUser.getEnrollments().stream()
                 .filter(e -> e.getCourseId().equals(course.getCourseId()))
                 .findFirst();
+        log.info("Enrollment found ::"+enrollmentOpt.get());
         if (enrollmentOpt.isPresent()) {
             Enrollment enrollment = enrollmentOpt.get();
             enrollment.setEnrollmentStatus(EnrollmentStatus.getEnrollmentStatus(course.getStatus()));
-            enrollment.getCourse().setLastVisitedChapter(course.getLastVisitedChapter());
-            enrollment.getCourse().setLastVisitedModule(course.getLastVisitedModule());
-            enrollment.getCourse().setStatus(course.getStatus());
-            enrollment.getCourse().setWatchedDuration(course.getWatchedDuration());
-            enrollment.getCourse().setAssessmentScore(course.getAssessmentScore());
-            enrollment.getCourse().setAssessmentStatus(course.getAssessmentStatus());
-
-            log.info("Enrollment Found :: " + enrollment.getCourseId());
-            for (Module moduleInRequest : course.getModules()){
-                Optional<Module> moduleOpt = enrollment.getCourse().getModules().stream()
-                        .filter(module -> module.getSerialNumber() == moduleInRequest.getSerialNumber())
-                        .findFirst();
-
-                if (moduleOpt.isPresent()) {
-                    Module module = moduleOpt.get();
-                    log.info("Module Found :: " + module.getSerialNumber());
-                    module.setWatchedDuration(moduleInRequest.getWatchedDuration());
-                    module.setStatus(moduleInRequest.getStatus());
-                    for(Chapter chapterInReq: moduleInRequest.getChapters()) {
-                        Optional<Chapter> chapterOpt = module.getChapters().stream()
-                                .filter(chapter -> chapter.getSerialNumber() == chapterInReq.getSerialNumber())
-                                .findFirst();
-
-                        if (chapterOpt.isPresent()) {
-                            log.info("Chapter Found :: " + chapterOpt.get().getSerialNumber());
-                            Chapter chapter = chapterOpt.get();
-                            chapter.setWatchedDuration(chapterInReq.getWatchedDuration());
-                            chapter.setStatus(chapterInReq.getStatus());
-                            module = updateChapter(module, chapter, chapterInReq.getSerialNumber());
-                        } else {
-                            log.info("Chapter Not Found :: Adding");
-                            module.getChapters().add(chapterInReq);
-                            module.getChapters().sort(Comparator.comparingInt(Chapter::getSerialNumber));
-                        }
-                        /*module.setWatchedDuration(module.getChapters().stream()
-                                .mapToInt(Chapter::getWatchedDuration)
-                                .sum());*/
-
-                    }
-                    updateModule(enrollment, module, moduleInRequest.getSerialNumber());
-                } else {
-                    log.info("Module Not Found :: Adding");
-                    enrollment.getCourse().getModules().add(moduleInRequest);
-                    enrollment.getCourse().getModules().sort(Comparator.comparingInt(Module::getSerialNumber));
-                }
-                /*enrollment.getCourse().setWatchedDuration(enrollment.getCourse().getModules().stream()
-                        .mapToInt(Module::getWatchedDuration)
-                        .sum());*/
-            }
-            updateEnrollment(lmsUser, enrollment, course.getCourseId());
+            enrollment.setCourse(course);
+            updateEnrollment(lmsUser, enrollment, course);
+        } else {
+            new RuntimeException("Course enrollment not found");
         }
     }
     @Override
@@ -369,7 +332,7 @@ public class UserServiceImpl implements UserService {
                     enrollment.getCourse().getModules().sort(Comparator.comparingInt(Module::getSerialNumber));
                 }
             }
-            updateEnrollment(lmsUser, enrollment, course.getCourseId());
+            updateEnrollment(lmsUser, enrollment, course);
         }
     }
 
@@ -394,10 +357,46 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
-    private void updateEnrollment(LmsUser lmsUser, Enrollment enrollment, String courseId) {
+    @Override
+    public byte[] completeCourse(CompleteCourseCommand completeCourseCommand) {
+        log.info("Entering getEnrollmentStatus for UserId %s, Course Id %s ", completeCourseCommand.getUserId(), completeCourseCommand.getCourse().getCourseId());
+        LmsUser lmsUser = userDynamoRepository.findBy(completeCourseCommand.getUserId());
+        if(lmsUser == null){
+            new RuntimeException("User not found");
+        }
+        LMSCourse course = completeCourseCommand.getCourse();
+        if (course == null) {
+            new RuntimeException("No course in the request");
+        }
+        Optional<Enrollment> enrollmentOpt = lmsUser.getEnrollments().stream()
+                .filter(e -> e.getCourseId().equals(completeCourseCommand.getCourse().getCourseId()))
+                .findFirst();
+        if (enrollmentOpt.isPresent()) {
+            Enrollment enrollment = enrollmentOpt.get();
+            enrollment.setEnrollmentStatus(EnrollmentStatus.COMPLETED);
+            enrollment.getCourse().setStatus(course.getStatus());
+            enrollment.getCourse().setWatchedDuration(course.getWatchedDuration());
+            enrollment.getCourse().setAssessmentScore(course.getAssessmentScore());
+            enrollment.getCourse().setAssessmentStatus(course.getAssessmentStatus());
+            lmsUser = updatePointsBadges(lmsUser, course);
+            updateEnrollment(lmsUser, enrollment, course);
+        }
+        GetCertificateCommand getCertificateCommand = GetCertificateCommand.builder()
+                .firstName(lmsUser.getFirstName())
+                .lastName(lmsUser.getLastName())
+                .courseDuration(String.valueOf(course.getCourseDuration()))
+                .courseName(course.getCourseName())
+                .courseInstructor(course.getInstructor())
+                .certificateType(COMPLETION_CERTIFICATE).build();
+
+        log.info("User found :: "+lmsUser);
+        return pdfService.generateCertificate(getCertificateCommand);
+    }
+
+    private void updateEnrollment(LmsUser lmsUser, Enrollment enrollment, LMSCourse course) {
         log.info("In updateEnrollment");
         lmsUser.getEnrollments().stream()
-                .filter(e -> e.getCourseId().equals(courseId))
+                .filter(e -> e.getCourseId().equals(course.getCourseId()))
                 .findFirst()
                 .ifPresent(e -> {
                     int index = lmsUser.getEnrollments().indexOf(e);
@@ -405,6 +404,26 @@ public class UserServiceImpl implements UserService {
                 });
         userDynamoRepository.save(lmsUser);
     }
+
+    private LmsUser updatePointsBadges(LmsUser lmsUser, LMSCourse course) {
+        int totalPoints = lmsUser.getPoints() + course.getPoints();
+        lmsUser.setPoints(totalPoints);
+        Map<String, Integer> badges = lmsUser.getBadges();
+        if(badges == null){
+            badges = new HashMap<>();
+        }
+        if(totalPoints == 100){
+            badges.put("SILVER", 1);
+        }
+        if(totalPoints == 200){
+            badges.put("SILVER", 1);
+        }
+        if(totalPoints == 300){
+            badges.put("GOLD", 1);
+        }
+        return lmsUser;
+    }
+
     private Enrollment updateModule(Enrollment enrollment, Module module, int moduleSerialNo) {
         log.info("In Module");
         LMSCourse lmsCourse = enrollment.getCourse();

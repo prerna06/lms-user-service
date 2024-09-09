@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
+import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import com.openhtmltopdf.svgsupport.BatikSVGDrawer;
 import com.tekcapzule.lms.user.domain.command.GetCertificateCommand;
@@ -37,7 +38,9 @@ public class PdfServiceImpl implements PdfService{
     private String extCertificateS3Bucket;
 
     public byte[] generateCertificate(GetCertificateCommand getCertificateCommand) {
-        Date currentDate = new Date(); SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        log.info(String.format("Inside generating Certificate for user : %s", getCertificateCommand.getFirstName()));
+        Date currentDate = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String currentDateTime = dateFormat. format(currentDate);
         Map<String, String> certificateData = new HashMap<>();
         certificateData.put("#NAME#", String.format(NAME, getCertificateCommand.getLastName(), getCertificateCommand.getFirstName()));
@@ -61,11 +64,12 @@ public class PdfServiceImpl implements PdfService{
         String baseUrl = resourceDirectory.toFile().getAbsolutePath();
         String fileAsString = readFileAsString(certificateType);
         fileAsString = StringUtility.replaceKeys(fileAsString, dataMap);
-        log.info("baseUrl :: "+baseUrl);
-        log.info("fileAsString baseUrl :: "+fileAsString);
+        log.info(String.format("baseUrl :: %s", baseUrl));
+        log.info(String.format("fileAsString baseUrl :: %s", fileAsString));
         try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
             Document document = Jsoup.parse(fileAsString);
             PdfRendererBuilder builder = new PdfRendererBuilder();
+            builder.useDefaultPageSize(9.90f, 7.0800f, BaseRendererBuilder.PageSizeUnits.INCHES);
             builder.withW3cDocument(new W3CDom().fromJsoup(document), baseUrl);
             builder.useSVGDrawer(new BatikSVGDrawer());
             builder.toStream(os);
@@ -140,7 +144,7 @@ public class PdfServiceImpl implements PdfService{
     }
 
     private InputStream getCertificateTemplateFile(String certificateType){
-        log.info("Entering getCertificateTemplateFile - Uploading object to bucket");
+        log.info(String.format("Entering getCertificateTemplateFile - Getting certificate template from bucket %s - certificate type : %s", extCertificateS3Bucket, certificateType));
         String s3bucketKey = String.format("template/%s.html", certificateType);
         AmazonS3 amazonS3 = AmazonS3ClientBuilder
                 .standard()
