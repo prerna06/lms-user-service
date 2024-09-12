@@ -420,6 +420,27 @@ Resources:
             RestApiId:
               Ref: LmsUserApi
 
+  GetLeaderBoardFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Stage}-LmsUser-GetLeaderBoard"
+      SnapStart:
+        ApplyOn: PublishedVersions
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LmsUserTable
+      Environment:
+        Variables:
+          SPRING_CLOUD_FUNCTION_DEFINITION: getLeaderBoardFunction
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: lms/user/leaderboard
+            Method: post
+            RestApiId:
+              Ref: LmsUserApi
+
   ConfigLambdaPermission:
     Type: "AWS::Lambda::Permission"
     DependsOn:

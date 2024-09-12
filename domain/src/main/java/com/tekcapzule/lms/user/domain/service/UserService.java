@@ -4,6 +4,7 @@ import com.tekcapzule.lms.user.domain.command.*;
 import com.tekcapzule.lms.user.domain.model.Enrollment;
 import com.tekcapzule.lms.user.domain.model.EnrollmentStatus;
 import com.tekcapzule.lms.user.domain.model.LmsUser;
+import com.tekcapzule.lms.user.domain.model.UserRank;
 
 import java.util.List;
 import java.util.Map;
@@ -40,4 +41,6 @@ public interface UserService {
     String getEnrollmentStatus(String userId, String tenantId, String courseId);
 
     byte[] completeCourse(CompleteCourseCommand completeCourseCommand);
+
+    List<UserRank> getLeaderBoard(String userId, String tenantId);
 }

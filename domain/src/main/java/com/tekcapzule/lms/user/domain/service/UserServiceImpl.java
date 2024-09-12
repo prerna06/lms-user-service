@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 @Service
 public class UserServiceImpl implements UserService {
     private static final String HASH = "#";
+    private static String NAME = "%s %s";
     private static final String COMPLETION_CERTIFICATE = "completion_certificate";
     private UserDynamoRepository userDynamoRepository;
     private PdfService pdfService;
@@ -391,6 +392,29 @@ public class UserServiceImpl implements UserService {
 
         log.info("User found :: "+lmsUser);
         return pdfService.generateCertificate(getCertificateCommand);
+    }
+
+    @Override
+    public List<UserRank> getLeaderBoard(String userId, String tenantId) {
+        log.info("In getLeaderBoard");
+        List<LmsUser> allUsers = userDynamoRepository.findAll();
+        allUsers.sort((u1, u2)-> Integer.compare(u2.getPoints(), u1.getPoints()));
+        List<UserRank> userRanks = new ArrayList<>();
+        int rank = 1;
+        for (int i = 0; i < allUsers.size(); i++) {
+            UserRank userRank = UserRank.builder()
+                    .userName(String.format(NAME, allUsers.get(0).getFirstName(), allUsers.get(0).getLastName()))
+                    .build();
+            // If points are equal, assign the same rank
+            if (i > 0 && allUsers.get(i).getPoints() == allUsers.get(i - 1).getPoints()) {
+                log.info("User Points :: "+allUsers.get(i).getPoints());
+                userRank.setRank(userRanks.get(i - 1).getRank());
+            } else {
+                userRank.setRank(rank);
+            }
+            rank++;
+        }
+        return userRanks;
     }
 
     private void updateEnrollment(LmsUser lmsUser, Enrollment enrollment, LMSCourse course) {
