@@ -398,22 +398,28 @@ public class UserServiceImpl implements UserService {
     public List<UserRank> getLeaderBoard(String userId, String tenantId) {
         log.info("In getLeaderBoard");
         List<LmsUser> allUsers = userDynamoRepository.findAll();
-        allUsers.sort((u1, u2)-> Integer.compare(u2.getPoints(), u1.getPoints()));
-        List<UserRank> userRanks = new ArrayList<>();
+
+        List<UserRank> userRanks = allUsers.stream()
+                .map(lmsUser -> UserRank.builder()
+                        .userName(String.format(NAME, lmsUser.getFirstName(), lmsUser.getLastName()))
+                        .points(lmsUser.getPoints())
+                        .build())
+                .collect(Collectors.toList());
+        userRanks.sort((u1, u2)-> Integer.compare(u2.getPoints(), u1.getPoints()));
         int rank = 1;
-        for (int i = 0; i < allUsers.size(); i++) {
-            UserRank userRank = UserRank.builder()
-                    .userName(String.format(NAME, allUsers.get(0).getFirstName(), allUsers.get(0).getLastName()))
-                    .build();
+
+        for (int i = 0; i < userRanks.size(); i++) {
+
             // If points are equal, assign the same rank
             if (i > 0 && allUsers.get(i).getPoints() == allUsers.get(i - 1).getPoints()) {
                 log.info("User Points :: "+allUsers.get(i).getPoints());
-                userRank.setRank(userRanks.get(i - 1).getRank());
+                userRanks.get(i).setRank(userRanks.get(i - 1).getRank());
             } else {
-                userRank.setRank(rank);
+                userRanks.get(i).setRank(rank);
             }
             rank++;
         }
+        log.info("userRanks", userRanks);
         return userRanks;
     }
 

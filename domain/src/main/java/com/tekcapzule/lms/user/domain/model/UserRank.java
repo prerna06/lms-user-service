@@ -13,6 +13,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserRank {
     private String userName;
-    private String points;
+    private int points;
     private int rank;
 }
