@@ -96,5 +96,12 @@ public final class InputOutputMapper {
         return completeCourseCommand;
     };
 
+    public static final BiFunction<CreateQuickLinkInput, Origin, CreateQuickLinkCommand> buildCreateQuickLinkCommand = (createQuickLinkInput, origin) -> {
+        CreateQuickLinkCommand createQuickLinkCommand =  CreateQuickLinkCommand.builder().build();
+        BeanUtils.copyProperties(createQuickLinkInput, createQuickLinkCommand);
+        addOrigin.apply(createQuickLinkCommand, origin);
+        return createQuickLinkCommand;
+    };
+
 
 }

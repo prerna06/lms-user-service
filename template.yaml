@@ -441,6 +441,48 @@ Resources:
             RestApiId:
               Ref: LmsUserApi
 
+  CreateQuickLinkFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Stage}-LmsUser-CreateQuickLink"
+      SnapStart:
+        ApplyOn: PublishedVersions
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LmsUserTable
+      Environment:
+        Variables:
+          SPRING_CLOUD_FUNCTION_DEFINITION: createQuickLinkFunction
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: lms/user/createquicklink
+            Method: post
+            RestApiId:
+              Ref: LmsUserApi
+
+  UpdateQuickLinkFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Stage}-LmsUser-UpdateQuickLink"
+      SnapStart:
+        ApplyOn: PublishedVersions
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LmsUserTable
+      Environment:
+        Variables:
+          SPRING_CLOUD_FUNCTION_DEFINITION: updateQuickLinkFunction
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: lms/user/updatequicklink
+            Method: post
+            RestApiId:
+              Ref: LmsUserApi
+
   ConfigLambdaPermission:
     Type: "AWS::Lambda::Permission"
     DependsOn:
