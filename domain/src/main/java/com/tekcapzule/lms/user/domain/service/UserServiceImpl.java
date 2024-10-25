@@ -423,6 +423,36 @@ public class UserServiceImpl implements UserService {
         return userRanks;
     }
 
+    @Override
+    public List<QuickLink> createQuickLink(CreateQuickLinkCommand createQuickLinkCommand) {
+        log.info("Entering createQuickLink for UserId %s ", createQuickLinkCommand.getUserId());
+        LmsUser lmsUser = userDynamoRepository.findBy(createQuickLinkCommand.getUserId());
+        if(lmsUser == null){
+            new RuntimeException("User not found");
+        }
+        List<QuickLink> quickLinks = createQuickLinkCommand.getQuickLinks();
+        if (lmsUser.getQuickLinks() == null) {
+            lmsUser.setQuickLinks(quickLinks);
+        } else {
+            lmsUser.getQuickLinks().addAll(quickLinks);
+        }
+        userDynamoRepository.save(lmsUser);
+        return lmsUser.getQuickLinks();
+    }
+
+    @Override
+    public List<QuickLink> updateQuickLink(CreateQuickLinkCommand createQuickLinkCommand) {
+        log.info("Entering createQuickLink for UserId %s ", createQuickLinkCommand.getUserId());
+        LmsUser lmsUser = userDynamoRepository.findBy(createQuickLinkCommand.getUserId());
+        if(lmsUser == null){
+            new RuntimeException("User not found");
+        }
+        List<QuickLink> quickLinks = createQuickLinkCommand.getQuickLinks();
+        lmsUser.setQuickLinks(quickLinks);
+        userDynamoRepository.save(lmsUser);
+        return lmsUser.getQuickLinks();
+    }
+
     private void updateEnrollment(LmsUser lmsUser, Enrollment enrollment, LMSCourse course) {
         log.info("In updateEnrollment");
         lmsUser.getEnrollments().stream()

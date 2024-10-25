@@ -1,10 +1,7 @@
 package com.tekcapzule.lms.user.domain.service;
 
 import com.tekcapzule.lms.user.domain.command.*;
-import com.tekcapzule.lms.user.domain.model.Enrollment;
-import com.tekcapzule.lms.user.domain.model.EnrollmentStatus;
-import com.tekcapzule.lms.user.domain.model.LmsUser;
-import com.tekcapzule.lms.user.domain.model.UserRank;
+import com.tekcapzule.lms.user.domain.model.*;
 
 import java.util.List;
 import java.util.Map;
@@ -43,4 +40,8 @@ public interface UserService {
     byte[] completeCourse(CompleteCourseCommand completeCourseCommand);
 
     List<UserRank> getLeaderBoard(String userId, String tenantId);
+
+    List<QuickLink> createQuickLink(CreateQuickLinkCommand createQuickLinkCommand);
+
+    List<QuickLink> updateQuickLink(CreateQuickLinkCommand createQuickLinkCommand);
 }
